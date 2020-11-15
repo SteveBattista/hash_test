@@ -4,7 +4,7 @@ To create a 8GB test file, please run the following command:<BR>
 ```sh
 dd if=/dev/urandom of=test bs=64M count=128 iflag=fullblock
 ```
-Please note that the conversion funtion uses 1,000 rather than 1,024 as delimter betwen file sizes.
+Please note that the conversion function uses 1,000 rather than 1,024 as delimter betwen file sizes.
 
 Running on a Dell6400 with:<br>
 Ubuntu 20.10 with only GUI and terminal running.<br>
