@@ -108,26 +108,11 @@ pub fn len(&self) -> usize{
 }
 
     pub fn return_hash <'a> (self, input : &[u8]) -> Vec<u8>{
-        let answer: Vec<u8>;
-
-        match self.hasher {
-            HasherEnum::Blake3Hasher(mut hasher) =>{
-                &hasher.update(input);
-                let temp_hasher = hasher.finalize();
-                answer = temp_hasher.as_bytes()[..].to_vec();
-            },
-            HasherEnum::SHADigest(mut digest) => {
-                digest.update(input);
-                let temp_digest = digest.finish();
-                answer = temp_digest.as_ref()[..].to_vec()
-            },
-        }
-        answer
+        self.mutli_hash_update(input).multi_hash_finish()
     }
 
-    pub fn finish <'a> (self) -> Vec<u8>{
+    pub fn multi_hash_finish <'a> (self) -> Vec<u8>{
         let answer: Vec<u8>;
-
         match self.hasher {
             HasherEnum::Blake3Hasher(hasher) =>{
                 let temp_hasher = hasher.finalize();
@@ -141,11 +126,11 @@ pub fn len(&self) -> usize{
         answer
     }
 
-    pub fn update<'a> (self, input : &[u8]) -> Self{
+    pub fn mutli_hash_update<'a> (self, input : &[u8]) -> Self{
         let hasherenum = self.hasher;
            match hasherenum{
                HasherEnum::Blake3Hasher(mut hasher) =>{
-                   hasher.update(input);
+                hasher.update_with_join::<blake3::join::RayonJoin>(input);
                    HasherOptions {
                        hasher :  HasherEnum::Blake3Hasher(hasher),
                        id : self.id,
@@ -197,7 +182,7 @@ fn maybe_hash_memmap(
     #[cfg(feature = "memmap")]
     {
         if let Some(map) = maybe_memmap_file(_file).unwrap(){
-            return Some(_base_hasher.clone().update(&map).finish());
+            return Some(_base_hasher.clone().mutli_hash_update(&map).multi_hash_finish());
         }
     }
     None
@@ -232,7 +217,7 @@ fn hash_reader(
     // second buffer. Since this is the slow path anyway, do the simple thing
     // for now.
     //std::io::copy(&mut reader, &mut hasher).unwrap();
-    let mut buffer = [0; 4096 / 8];
+    let mut buffer = [0; 128 *1024];
 
     loop {
         let count = match reader.read(&mut buffer) {
@@ -242,14 +227,19 @@ fn hash_reader(
         if count == 0 {
             break;
         }
-        hasher = hasher.update(&buffer[..count]);
+        hasher = hasher.mutli_hash_update(&buffer[..count]);
     }
-    hasher.finish()
+    hasher.multi_hash_finish()
 }
 
 
 
 fn main() {
+println!("Ensuring file is cached");
+let digest = HasherOptions::new("blake3");
+hash_file(&digest,OsStr::new("./test"));
+println!("File is cached.");
+
 let hash_type = ["blake3","128","256","384","512","512_256"];
     hash_type.iter().for_each( |each_hash |{
         let start = Instant::now();
