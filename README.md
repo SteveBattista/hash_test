@@ -6,13 +6,13 @@ dd if=/dev/urandom of=test bs=64M count=128 iflag=fullblock
 ```
 Please note that the conversion funtion uses 1,000 rather than 1,024 as delimter betwen file sizes.
 
-Running on a Dell6400 with a 
-Ubuntu 20.10 with only GUI and terminal running.
-Using memap
-Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz (2 cores 4 threads)
-16MB of 1333 MT/s Ram
-Spinning hard disk: WDC WD2500BEKT-00PVMT0 
-
+Running on a Dell6400 with:<br>
+Ubuntu 20.10 with only GUI and terminal running.<br>
+Using memap<br>
+Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz (2 cores 4 threads)<br>
+16MB of 1333 MT/s Ram<br>
+Spinning hard disk: WDC WD2500BEKT-00PVMT0 <br>
+<br>
 
 ```
 Input file named ./test is 8.59 GB in size.
