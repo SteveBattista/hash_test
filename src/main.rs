@@ -5,11 +5,13 @@ use blake3::Hasher;
 use data_encoding::HEXUPPER;
 use std::ffi::OsStr;
 
+use pretty_bytes::converter::convert;
 
-use std::fs::File;
+use std::fs::{File,metadata};
 
 use std::io::{ Read};
 
+#[cfg(feature = "memmap")]
 use anyhow::Result;
 
 #[derive(Clone)]
@@ -217,8 +219,9 @@ fn hash_reader(
     // second buffer. Since this is the slow path anyway, do the simple thing
     // for now.
     //std::io::copy(&mut reader, &mut hasher).unwrap();
-    let mut buffer = [0; 128 *1024];
-    println!("{} bytes.",buffer.len());
+    let mut buffer = [0; 256 *1024];
+    //buffer size optmized for large files 
+    println!("{}.",convert(buffer.len() as f64));
     loop {
         let count = match reader.read(&mut buffer) {
             Ok(count) => count,
@@ -232,20 +235,24 @@ fn hash_reader(
     hasher.multi_hash_finish()
 }
 
+static FILE_NAME : &str = "./test" ;
 
 
 fn main() {
+let file_size = metadata(FILE_NAME).unwrap().len();
+println!("Input file named {} is {} in size.",FILE_NAME, convert(file_size as f64));
 println!("Ensuring file is cached");
 let digest = HasherOptions::new("blake3");
-hash_file(&digest,OsStr::new("./test"));
+hash_file(&digest,OsStr::new(FILE_NAME));
 println!("File is cached.");
 
 let hash_type = ["blake3","128","256","384","512","512_256"];
     hash_type.iter().for_each( |each_hash |{
         let start = Instant::now();
         let digest = HasherOptions::new(each_hash);
-        println! ("{} value is {:?}",each_hash,HEXUPPER.encode(&hash_file(&digest,OsStr::new("./test"))));
-        println!("{} took {:?} milliseconds", each_hash, start.elapsed().as_millis());
+        println! ("{} value is {:?}",each_hash,HEXUPPER.encode(&hash_file(&digest,OsStr::new(FILE_NAME))));
+        let elapsed_time = start.elapsed().as_millis();
+        println!("{} took {:?} milliseconds. Speed is {}s", each_hash, elapsed_time,convert(((file_size as u128 /elapsed_time)*1000)as f64));
     })
 
 }
