@@ -10,6 +10,8 @@ use std::fs::File;
 
 use std::io::{ Read};
 
+use anyhow::Result;
+
 #[derive(Clone)]
 pub enum HasherEnum {
     Blake3Hasher (Hasher),
