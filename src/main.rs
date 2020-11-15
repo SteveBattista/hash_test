@@ -194,11 +194,11 @@ fn hash_file(
 ) -> Vec<u8> {
     let file = File::open(filepath).unwrap();
     if let Some(output) = maybe_hash_memmap(&base_hasher, &file) {
-        println!("Using memmap");
+        println!("File is being hashed with memmap.");
         output // the fast path
     } else {
         // the slow path
-        println!("Could not use memmap");
+        print!("File is being hashed using a buffer with a size of ");
         hash_reader(&base_hasher, file)
     }
 }
@@ -218,7 +218,7 @@ fn hash_reader(
     // for now.
     //std::io::copy(&mut reader, &mut hasher).unwrap();
     let mut buffer = [0; 128 *1024];
-
+    println!("{} bytes.",buffer.len());
     loop {
         let count = match reader.read(&mut buffer) {
             Ok(count) => count,
