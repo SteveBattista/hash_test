@@ -7,7 +7,7 @@ dd if=/dev/urandom of=test bs=64M count=128 iflag=fullblock
 Please note that the conversion function uses 1,000 rather than 1,024 as delimiter between file size units.
 
 Running on a Dell6400 with:<br>
-Ubuntu 20.10 with only GUI and terminal running.<br>
+Ubuntu 21.10 on a server.<br>
 Using memap<br>
 Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz (2 cores 4 threads)<br>
 16MB of 1333 MT/s Ram<br>
