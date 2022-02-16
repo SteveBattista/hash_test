@@ -18,6 +18,7 @@ use anyhow::Result;
 pub enum HasherEnum {
     Blake3Hasher(Box<Hasher>),
     SHADigest(Box<Context>),
+    MD5(Box<[u8; 16]>),
 }
 
 impl HasherEnum {
@@ -29,6 +30,7 @@ impl HasherEnum {
             "384" => HasherEnum::SHADigest(Box::new(Context::new(&SHA384))),
             "512" => HasherEnum::SHADigest(Box::new(Context::new(&SHA512))),
             "512_256" => HasherEnum::SHADigest(Box::new(Context::new(&SHA512_256))),
+            "MD5" => HasherEnum::MD5(Box::new([0; 16])),
             _ => panic!("Incorrect hash string input."),
         }
     }
@@ -42,6 +44,7 @@ enum AlgorithmID {
     SHA384,
     SHA512,
     SHA512_256,
+    MD5,
 }
 #[derive(Clone)]
 pub struct HasherOptions {
@@ -91,6 +94,12 @@ impl HasherOptions {
                     id: AlgorithmID::SHA512_256,
                 }
             }
+            "MD5" => {
+                hasherinstance = HasherOptions {
+                    hasher: HasherEnum::MD5(Box::new([0; 16])),
+                    id: AlgorithmID::MD5,
+                }
+            }
             _ => panic!("Incorrect hash string input."),
         };
         hasherinstance
@@ -104,6 +113,7 @@ impl HasherOptions {
             AlgorithmID::SHA384 => 384,
             AlgorithmID::SHA512 => 512,
             AlgorithmID::SHA512_256 => 256,
+            AlgorithmID::MD5 => 128,
         }
     }
 
@@ -122,6 +132,7 @@ impl HasherOptions {
                 let temp_digest = digest.finish();
                 answer = temp_digest.as_ref()[..].to_vec()
             }
+            HasherEnum::MD5(digest) => answer = digest.to_vec(),
         }
         answer
     }
@@ -143,6 +154,10 @@ impl HasherOptions {
                     id: self.id,
                 }
             }
+            HasherEnum::MD5(_) => HasherOptions {
+                hasher: HasherEnum::MD5(Box::new(md5::compute(input).0)),
+                id: self.id,
+            },
         }
     }
 }
@@ -240,7 +255,7 @@ fn main() {
     hash_file(&digest, OsStr::new(FILE_NAME));
     println!("File is cached.");
 
-    let hash_type = ["blake3", "128", "256", "384", "512", "512_256"];
+    let hash_type = ["blake3", "128", "256", "384", "512", "512_256", "MD5"];
     hash_type.iter().for_each(|each_hash| {
         let start = Instant::now();
         let digest = HasherOptions::new(each_hash);
@@ -254,7 +269,11 @@ fn main() {
             "{} took {:?} milliseconds. Speed is {}s",
             each_hash,
             elapsed_time,
-            convert(((file_size as u128 / elapsed_time) * 1000) as f64)
+            if elapsed_time == 0 {
+                "N/A".to_string()
+            } else {
+                convert(((file_size as u128 / elapsed_time) * 1000) as f64)
+            }
         );
     })
 }
